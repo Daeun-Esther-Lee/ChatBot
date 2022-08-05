@@ -47,7 +47,13 @@ def query(bot_type):
 
         elif bot_type == "KAKAO":
             # 카카오톡 스킬 처리
-            pass
+            body = request.get_json()
+            utterance = body['userRequest']['utterance']
+            ret = get_answer_from_engine(bottype = bot_type, query = utterance)
+
+            from KaKaoTemplate import KaKaoTemplate
+            skillTemplate = KaKaoTemplate()
+            return skillTemplate.send_response(ret)
 
         elif bot_type == "NAVER":
             # 네이버톡톡 Web hook, 이벤트 처리
