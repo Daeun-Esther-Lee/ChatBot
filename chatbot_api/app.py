@@ -34,10 +34,6 @@ def get_answer_from_engine(bottype, query):
     return ret_data
 
 
-@app.route('/', methods=['GET'])
-def index():
-    print('hello')
-
 # 챗봇 엔진 query 전송 API
 @app.route('/query/<bot_type>', methods=['POST'])
 def query(bot_type):
@@ -46,7 +42,7 @@ def query(bot_type):
     try:
         if bot_type == 'TEST':
             # 챗봇 API 테스트
-            ret = get_answer_from_engine(bottype=bot_type, query=body['query'])
+            ret = get_answer_from_engine(bottype = bot_type, query = body['query'])
             return jsonify(ret)
 
         elif bot_type == "KAKAO":
@@ -54,8 +50,31 @@ def query(bot_type):
             pass
 
         elif bot_type == "NAVER":
-            # 네이버톡톡 Web hook 처리
-            pass
+            # 네이버톡톡 Web hook, 이벤트 처리
+            body = request.get_json()
+            user_key = body['user']
+            event = body['event']
+
+            from NaverEvent import NaverEvent
+            authorization_key = '3YAPQKiuSaGGuD5BLpKD'
+            naverEvent = NaverEvent(authorization_key)
+
+            if event == "open":
+                # 사용자가 채팅방에 들어왔을 때 처리
+                print("채팅방에 유저가 들어왔습니다.")
+                return json.dumps({}), 200
+
+            elif event == "leave":
+                # 사용자가 채팅방에서 나갔을 때 처리
+                print("채팅방에서 유저가 나갔습니다.")
+                return json.dumps({}), 200
+
+            elif event == "send":
+                # 사용자가 챗봇에 send 이벤트를 전송했을 때
+                user_text = body['textContent']['text']
+                ret = get_answer_from_engine(bottype = bot_type, query = user_text)
+                return naverEvent.send_response(user_key, ret)
+
         else:
             # 정의되지 않은 bot type인 경우 404 오류
             abort(404)
@@ -66,4 +85,4 @@ def query(bot_type):
 
 
 if __name__ == '__main__':
-    app.run(host = host, port = port)
+    app.run(host = '0.0.0.0', port = 5000)
